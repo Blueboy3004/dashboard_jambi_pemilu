@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard WebGIS</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Link ke file CSS -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 font-sans">
+         <!-- Navbar -->
+         <nav class="navbar">
+            <div class="logo">Dashboard Perolehan Suara Partai Politik Dapil Provinsi Jambi Pemilu 2024</div>
+            <div class="menu-toggle" onclick="toggleMenu()">&#9776;</div>
+            <ul class="menu">
+                <li><a href="https://Blueboy3004.github.io/dashboard_jambi_pemilu/">Dashboard</a></li>
+                <li><a href="https://Blueboy3004.github.io/Peta-Partai/">See Fullscreen Map</a></li>
+                <li><a href="https://instagram.com/m.iqbal.mln">Contact</a></li>
+            </ul>
+            </nav>
+                <!-- Main Content -->
+    <div class="container mx-auto mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Peta -->
+        <div class="bg-white p-4 shadow rounded">
+          <h2 class="text-lg font-semibold mb-4">Peta Interaktif</h2>
+          <iframe src="https://Blueboy3004.github.io/Peta-Partai/" class="w-full h-80 border rounded" allowfullscreen></iframe>
+        </div>
+
+    <!-- Diagram -->
+    <div class="bg-white p-4 shadow rounded">
+        <h2 class="text-lg font-semibold mb-4">Diagram Infografis</h2>
+        <!-- <canvas id="chart" class="w-full h-80"></canvas> -->
+        <!-- <h2 style="text-align: center;">Total Suara Partai per Kabupaten/Kota</h2> -->
+        <canvas id="stackedBarChart" width="800" height="400"></canvas>
+    </div>
+
+    <script>
+        // Labels untuk sumbu X (Kabupaten/Kota)
+        const labels = ["Batang Hari", "Bungo", "Jambi", "Kerinci", "Merangin", "Muaro Jambi", "Sarolangun", "Sungai Penuh", "Tanjung Jabung Barat", "Tanjung Jabung Timur", "Tebo"];
+    
+        // Data suara partai per kabupaten/kota
+        const dataPartai = {
+            "PKB": [31838, 14032, 17977, 47717, 25220, 17761, 8385, 5267, 16185, 5906, 22559],
+            "Gerindra": [9386, 22129, 54792, 27445, 25741, 30781, 1306, 3483, 33394, 8184, 12956],
+            "PDIP": [22594, 17748, 48029, 11197, 42589, 43340, 34251, 4122, 34446, 23922, 35886],
+            "Golkar": [18012, 24387, 47875, 18263, 32497, 33740, 54863, 14728, 21357, 18888, 56429],
+            "NasDem": [27667, 16082, 46744, 9702, 18699, 11253, 8778, 2998, 13774, 8896, 11848],
+            "Buruh": [670, 1389, 1869, 784, 1703, 1469, 552, 231, 901, 1113, 1552],
+            "Gelora": [962, 2701, 2113, 122, 2548, 1538, 914, 318, 1370, 981, 962],
+            "PKS": [6353, 11873, 29990, 6137, 9200, 10298, 12521, 4245, 6655, 3487, 6539],
+            "PKN": [355, 814, 740, 355, 844, 344, 1370, 72, 206, 301, 255],
+            "Hanura": [1801, 3192, 1536, 680, 1689, 1061, 627, 387, 477, 581, 752],
+            "Garuda": [397, 884, 949, 403, 925, 683, 543, 148, 523, 449, 825],
+            "PAN": [7827, 11131, 22475, 15092, 13311, 26481, 6363, 3343, 18388, 32675, 9204],
+            "PBB": [457, 450, 1125, 266, 611, 673, 312, 67, 675, 495, 326],
+            "Demokrat": [7963, 47604, 22766, 7418, 19264, 26520, 8211, 10229, 7882, 18721, 21384],
+            "PSI": [1622, 3589, 13825, 445, 2219, 4466, 1560, 345, 3604, 1063, 1911],
+            "Perindo": [1710, 2477, 8410, 2307, 2655, 4780, 848, 305, 3178, 1515, 804],
+            "PPP": [14924, 4966, 4908, 3922, 8236, 5628, 5075, 2341, 2662, 2453, 2999],
+            "Ummat": [920, 4950, 1189, 361, 305, 437, 474, 96, 705, 307, 391]
+        };
+    
+        // Warna khusus untuk setiap partai
+        const partaiColors = {
+            "PKB": "darkgreen",
+            "Gerindra": "darkorange",
+            "PDIP": "red",
+            "Golkar": "yellow",
+            "NasDem": "darkblue",
+            "Partai Buruh": "orange",
+            "Partai Gelora": "lightblue",
+            "PKS": "orange",
+            "PKN": "darkred",
+            "Hanura": "lightcoral",
+            "Partai Garuda": "blue",
+            "PAN": "darkblue",
+            "PBB": "green",
+            "Partai Demokrat": "darkblue",
+            "PSI": "red",
+            "Partai Perindo": "blue",
+            "PPP": "green",
+            "Partai Ummat": "black"
+        };
+    
+        // Menyiapkan dataset
+        const datasets = Object.keys(dataPartai).map(partai => ({
+            label: partai,
+            data: dataPartai[partai],
+            backgroundColor: partaiColors[partai],
+            borderColor: partaiColors[partai],
+            borderWidth: 1
+        }));
+    
+        // Membuat grafik
+        const ctx = document.getElementById('stackedBarChart').getContext('2d');
+        const stackedBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                },
+                scales: {
+                    x: {
+                        stacked: true // Mengaktifkan stack pada sumbu X
+                    },
+                    y: {
+                        stacked: true, // Mengaktifkan stack pada sumbu Y
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+  </div>
+<!-- Tabel -->
+<div class="container mx-auto mt-6 bg-white p-4 shadow rounded">
+    <h2 class="text-lg font-semibold mb-4">Data Tabel</h2>
+    <div class="overflow-y-auto h-80 border rounded"> <!-- Kontainer dengan scroll -->
+      <table class="table-auto w-full border">
+        <thead class="bg-white-200">
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Kabupaten/Kota</td>
+                <td class="px-4 py-2 border border-gray-300">PKB</td>
+                <td class="px-4 py-2 border border-gray-300">GERINDRA</td>
+                <td class="px-4 py-2 border border-gray-300">PDIP</td>
+                <td class="px-4 py-2 border border-gray-300">GOLKAR</td>
+                <td class="px-4 py-2 border border-gray-300">NASDEM</td>
+                <td class="px-4 py-2 border border-gray-300">BURUH</td>
+                <td class="px-4 py-2 border border-gray-300">GELORA</td>
+                <td class="px-4 py-2 border border-gray-300">PKS</td>
+                <td class="px-4 py-2 border border-gray-300">PKN</td>
+                <td class="px-4 py-2 border border-gray-300">HANURA</td>
+                <td class="px-4 py-2 border border-gray-300">GARUDA</td>
+                <td class="px-4 py-2 border border-gray-300">PAN</td>
+                <td class="px-4 py-2 border border-gray-300">PBB</td>
+                <td class="px-4 py-2 border border-gray-300">DEMOKRAT</td>
+                <td class="px-4 py-2 border border-gray-300">PSI</td>
+                <td class="px-4 py-2 border border-gray-300">PERINDO</td>
+                <td class="px-4 py-2 border border-gray-300">PPP</td>
+                <td class="px-4 py-2 border border-gray-300">UMMAT</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Batang Hari</td>
+                <td class="px-4 py-2 border border-gray-300">31838</td>
+                <td class="px-4 py-2 border border-gray-300">9386</td>
+                <td class="px-4 py-2 border border-gray-300">22594</td>
+                <td class="px-4 py-2 border border-gray-300">18012</td>
+                <td class="px-4 py-2 border border-gray-300">27667</td>
+                <td class="px-4 py-2 border border-gray-300">670</td>
+                <td class="px-4 py-2 border border-gray-300">962</td>
+                <td class="px-4 py-2 border border-gray-300">6353</td>
+                <td class="px-4 py-2 border border-gray-300">355</td>
+                <td class="px-4 py-2 border border-gray-300">1801</td>
+                <td class="px-4 py-2 border border-gray-300">397</td>
+                <td class="px-4 py-2 border border-gray-300">7827</td>
+                <td class="px-4 py-2 border border-gray-300">457</td>
+                <td class="px-4 py-2 border border-gray-300">7963</td>
+                <td class="px-4 py-2 border border-gray-300">1622</td>
+                <td class="px-4 py-2 border border-gray-300">1710</td>
+                <td class="px-4 py-2 border border-gray-300">14924</td>
+                <td class="px-4 py-2 border border-gray-300">920</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Bungo</td>
+                <td class="px-4 py-2 border border-gray-300">14032</td>
+                <td class="px-4 py-2 border border-gray-300">22129</td>
+                <td class="px-4 py-2 border border-gray-300">17748</td>
+                <td class="px-4 py-2 border border-gray-300">24387</td>
+                <td class="px-4 py-2 border border-gray-300">16082</td>
+                <td class="px-4 py-2 border border-gray-300">1389</td>
+                <td class="px-4 py-2 border border-gray-300">2701</td>
+                <td class="px-4 py-2 border border-gray-300">11873</td>
+                <td class="px-4 py-2 border border-gray-300">814</td>
+                <td class="px-4 py-2 border border-gray-300">3192</td>
+                <td class="px-4 py-2 border border-gray-300">884</td>
+                <td class="px-4 py-2 border border-gray-300">11131</td>
+                <td class="px-4 py-2 border border-gray-300">450</td>
+                <td class="px-4 py-2 border border-gray-300">47604</td>
+                <td class="px-4 py-2 border border-gray-300">3589</td>
+                <td class="px-4 py-2 border border-gray-300">2477</td>
+                <td class="px-4 py-2 border border-gray-300">4966</td>
+                <td class="px-4 py-2 border border-gray-300">4950</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Jambi</td>
+                <td class="px-4 py-2 border border-gray-300">17977</td>
+                <td class="px-4 py-2 border border-gray-300">54792</td>
+                <td class="px-4 py-2 border border-gray-300">48029</td>
+                <td class="px-4 py-2 border border-gray-300">47875</td>
+                <td class="px-4 py-2 border border-gray-300">46744</td>
+                <td class="px-4 py-2 border border-gray-300">1869</td>
+                <td class="px-4 py-2 border border-gray-300">2113</td>
+                <td class="px-4 py-2 border border-gray-300">29990</td>
+                <td class="px-4 py-2 border border-gray-300">740</td>
+                <td class="px-4 py-2 border border-gray-300">1536</td>
+                <td class="px-4 py-2 border border-gray-300">949</td>
+                <td class="px-4 py-2 border border-gray-300">22475</td>
+                <td class="px-4 py-2 border border-gray-300">1125</td>
+                <td class="px-4 py-2 border border-gray-300">22766</td>
+                <td class="px-4 py-2 border border-gray-300">13825</td>
+                <td class="px-4 py-2 border border-gray-300">8410</td>
+                <td class="px-4 py-2 border border-gray-300">4908</td>
+                <td class="px-4 py-2 border border-gray-300">1189</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Kerinci</td>
+                <td class="px-4 py-2 border border-gray-300">47717</td>
+                <td class="px-4 py-2 border border-gray-300">27445</td>
+                <td class="px-4 py-2 border border-gray-300">11197</td>
+                <td class="px-4 py-2 border border-gray-300">18263</td>
+                <td class="px-4 py-2 border border-gray-300">9702</td>
+                <td class="px-4 py-2 border border-gray-300">784</td>
+                <td class="px-4 py-2 border border-gray-300">122</td>
+                <td class="px-4 py-2 border border-gray-300">6137</td>
+                <td class="px-4 py-2 border border-gray-300">355</td>
+                <td class="px-4 py-2 border border-gray-300">680</td>
+                <td class="px-4 py-2 border border-gray-300">403</td>
+                <td class="px-4 py-2 border border-gray-300">15092</td>
+                <td class="px-4 py-2 border border-gray-300">266</td>
+                <td class="px-4 py-2 border border-gray-300">7418</td>
+                <td class="px-4 py-2 border border-gray-300">445</td>
+                <td class="px-4 py-2 border border-gray-300">2307</td>
+                <td class="px-4 py-2 border border-gray-300">3922</td>
+                <td class="px-4 py-2 border border-gray-300">361</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Merangin</td>
+                <td class="px-4 py-2 border border-gray-300">25220</td>
+                <td class="px-4 py-2 border border-gray-300">25741</td>
+                <td class="px-4 py-2 border border-gray-300">42589</td>
+                <td class="px-4 py-2 border border-gray-300">32497</td>
+                <td class="px-4 py-2 border border-gray-300">18699</td>
+                <td class="px-4 py-2 border border-gray-300">1703</td>
+                <td class="px-4 py-2 border border-gray-300">2548</td>
+                <td class="px-4 py-2 border border-gray-300">9200</td>
+                <td class="px-4 py-2 border border-gray-300">844</td>
+                <td class="px-4 py-2 border border-gray-300">1689</td>
+                <td class="px-4 py-2 border border-gray-300">925</td>
+                <td class="px-4 py-2 border border-gray-300">13311</td>
+                <td class="px-4 py-2 border border-gray-300">611</td>
+                <td class="px-4 py-2 border border-gray-300">19264</td>
+                <td class="px-4 py-2 border border-gray-300">2219</td>
+                <td class="px-4 py-2 border border-gray-300">2655</td>
+                <td class="px-4 py-2 border border-gray-300">8236</td>
+                <td class="px-4 py-2 border border-gray-300">305</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Muaro Jambi</td>
+                <td class="px-4 py-2 border border-gray-300">17761</td>
+                <td class="px-4 py-2 border border-gray-300">30781</td>
+                <td class="px-4 py-2 border border-gray-300">43340</td>
+                <td class="px-4 py-2 border border-gray-300">33740</td>
+                <td class="px-4 py-2 border border-gray-300">11253</td>
+                <td class="px-4 py-2 border border-gray-300">1469</td>
+                <td class="px-4 py-2 border border-gray-300">1538</td>
+                <td class="px-4 py-2 border border-gray-300">10298</td>
+                <td class="px-4 py-2 border border-gray-300">344</td>
+                <td class="px-4 py-2 border border-gray-300">1061</td>
+                <td class="px-4 py-2 border border-gray-300">683</td>
+                <td class="px-4 py-2 border border-gray-300">26481</td>
+                <td class="px-4 py-2 border border-gray-300">673</td>
+                <td class="px-4 py-2 border border-gray-300">26520</td>
+                <td class="px-4 py-2 border border-gray-300">4466</td>
+                <td class="px-4 py-2 border border-gray-300">4780</td>
+                <td class="px-4 py-2 border border-gray-300">5628</td>
+                <td class="px-4 py-2 border border-gray-300">437</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Sarolangun</td>
+                <td class="px-4 py-2 border border-gray-300">8385</td>
+                <td class="px-4 py-2 border border-gray-300">1306</td>
+                <td class="px-4 py-2 border border-gray-300">34251</td>
+                <td class="px-4 py-2 border border-gray-300">54863</td>
+                <td class="px-4 py-2 border border-gray-300">8778</td>
+                <td class="px-4 py-2 border border-gray-300">552</td>
+                <td class="px-4 py-2 border border-gray-300">914</td>
+                <td class="px-4 py-2 border border-gray-300">12521</td>
+                <td class="px-4 py-2 border border-gray-300">1370</td>
+                <td class="px-4 py-2 border border-gray-300">627</td>
+                <td class="px-4 py-2 border border-gray-300">543</td>
+                <td class="px-4 py-2 border border-gray-300">6363</td>
+                <td class="px-4 py-2 border border-gray-300">312</td>
+                <td class="px-4 py-2 border border-gray-300">8211</td>
+                <td class="px-4 py-2 border border-gray-300">1560</td>
+                <td class="px-4 py-2 border border-gray-300">848</td>
+                <td class="px-4 py-2 border border-gray-300">5075</td>
+                <td class="px-4 py-2 border border-gray-300">474</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Sungai Penuh</td>
+                <td class="px-4 py-2 border border-gray-300">5267</td>
+                <td class="px-4 py-2 border border-gray-300">3483</td>
+                <td class="px-4 py-2 border border-gray-300">4122</td>
+                <td class="px-4 py-2 border border-gray-300">14728</td>
+                <td class="px-4 py-2 border border-gray-300">2998</td>
+                <td class="px-4 py-2 border border-gray-300">231</td>
+                <td class="px-4 py-2 border border-gray-300">318</td>
+                <td class="px-4 py-2 border border-gray-300">4245</td>
+                <td class="px-4 py-2 border border-gray-300">72</td>
+                <td class="px-4 py-2 border border-gray-300">387</td>
+                <td class="px-4 py-2 border border-gray-300">148</td>
+                <td class="px-4 py-2 border border-gray-300">3343</td>
+                <td class="px-4 py-2 border border-gray-300">67</td>
+                <td class="px-4 py-2 border border-gray-300">10229</td>
+                <td class="px-4 py-2 border border-gray-300">345</td>
+                <td class="px-4 py-2 border border-gray-300">305</td>
+                <td class="px-4 py-2 border border-gray-300">2341</td>
+                <td class="px-4 py-2 border border-gray-300">96</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Tanjung Jabung Barat</td>
+                <td class="px-4 py-2 border border-gray-300">16185</td>
+                <td class="px-4 py-2 border border-gray-300">33394</td>
+                <td class="px-4 py-2 border border-gray-300">34446</td>
+                <td class="px-4 py-2 border border-gray-300">21357</td>
+                <td class="px-4 py-2 border border-gray-300">13774</td>
+                <td class="px-4 py-2 border border-gray-300">901</td>
+                <td class="px-4 py-2 border border-gray-300">1370</td>
+                <td class="px-4 py-2 border border-gray-300">6655</td>
+                <td class="px-4 py-2 border border-gray-300">206</td>
+                <td class="px-4 py-2 border border-gray-300">477</td>
+                <td class="px-4 py-2 border border-gray-300">523</td>
+                <td class="px-4 py-2 border border-gray-300">18388</td>
+                <td class="px-4 py-2 border border-gray-300">675</td>
+                <td class="px-4 py-2 border border-gray-300">7882</td>
+                <td class="px-4 py-2 border border-gray-300">3604</td>
+                <td class="px-4 py-2 border border-gray-300">3178</td>
+                <td class="px-4 py-2 border border-gray-300">2662</td>
+                <td class="px-4 py-2 border border-gray-300">705</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Tanjung Jabung Timur</td>
+                <td class="px-4 py-2 border border-gray-300">5906</td>
+                <td class="px-4 py-2 border border-gray-300">8184</td>
+                <td class="px-4 py-2 border border-gray-300">23922</td>
+                <td class="px-4 py-2 border border-gray-300">18888</td>
+                <td class="px-4 py-2 border border-gray-300">8896</td>
+                <td class="px-4 py-2 border border-gray-300">1113</td>
+                <td class="px-4 py-2 border border-gray-300">981</td>
+                <td class="px-4 py-2 border border-gray-300">3487</td>
+                <td class="px-4 py-2 border border-gray-300">301</td>
+                <td class="px-4 py-2 border border-gray-300">581</td>
+                <td class="px-4 py-2 border border-gray-300">449</td>
+                <td class="px-4 py-2 border border-gray-300">32675</td>
+                <td class="px-4 py-2 border border-gray-300">495</td>
+                <td class="px-4 py-2 border border-gray-300">18721</td>
+                <td class="px-4 py-2 border border-gray-300">1063</td>
+                <td class="px-4 py-2 border border-gray-300">1515</td>
+                <td class="px-4 py-2 border border-gray-300">2453</td>
+                <td class="px-4 py-2 border border-gray-300">307</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Tebo</td>
+                <td class="px-4 py-2 border border-gray-300">22559</td>
+                <td class="px-4 py-2 border border-gray-300">12956</td>
+                <td class="px-4 py-2 border border-gray-300">35886</td>
+                <td class="px-4 py-2 border border-gray-300">56429</td>
+                <td class="px-4 py-2 border border-gray-300">11848</td>
+                <td class="px-4 py-2 border border-gray-300">1552</td>
+                <td class="px-4 py-2 border border-gray-300">962</td>
+                <td class="px-4 py-2 border border-gray-300">6539</td>
+                <td class="px-4 py-2 border border-gray-300">255</td>
+                <td class="px-4 py-2 border border-gray-300">752</td>
+                <td class="px-4 py-2 border border-gray-300">825</td>
+                <td class="px-4 py-2 border border-gray-300">9204</td>
+                <td class="px-4 py-2 border border-gray-300">326</td>
+                <td class="px-4 py-2 border border-gray-300">21384</td>
+                <td class="px-4 py-2 border border-gray-300">1911</td>
+                <td class="px-4 py-2 border border-gray-300">804</td>
+                <td class="px-4 py-2 border border-gray-300">2999</td>
+                <td class="px-4 py-2 border border-gray-300">391</td>
+            </tr>
+            <tr>
+                <td class="px-4 py-2 border border-gray-300">Total Suara</td>
+                <td class="px-4 py-2 border border-gray-300">212847</td>
+                <td class="px-4 py-2 border border-gray-300">229597</td>
+                <td class="px-4 py-2 border border-gray-300">318124</td>
+                <td class="px-4 py-2 border border-gray-300">341039</td>
+                <td class="px-4 py-2 border border-gray-300">176441</td>
+                <td class="px-4 py-2 border border-gray-300">12233</td>
+                <td class="px-4 py-2 border border-gray-300">14529</td>
+                <td class="px-4 py-2 border border-gray-300">107298</td>
+                <td class="px-4 py-2 border border-gray-300">5656</td>
+                <td class="px-4 py-2 border border-gray-300">12783</td>
+                <td class="px-4 py-2 border border-gray-300">6729</td>
+                <td class="px-4 py-2 border border-gray-300">166290</td>
+                <td class="px-4 py-2 border border-gray-300">5457</td>
+                <td class="px-4 py-2 border border-gray-300">197962</td>
+                <td class="px-4 py-2 border border-gray-300">34649</td>
+                <td class="px-4 py-2 border border-gray-300">28989</td>
+                <td class="px-4 py-2 border border-gray-300">58114</td>
+                <td class="px-4 py-2 border border-gray-300">10135</td>
+            </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+        
+</body>
+</html>
